@@ -4,6 +4,8 @@
 #include <signal.h>
 
 #include <assert.h>
+#include <errno.h>
+#include <stddef.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -18,8 +20,8 @@
 
 #define pt(command, addr, data)                                                                                        \
     do {                                                                                                               \
-        err = ptrace(PTRACE_##command, pid, addr, data);                                                               \
-        if (err == -1) {                                                                                               \
+        int err = ptrace(PTRACE_##command, pid, addr, data);                                                           \
+        if (err == -1 && errno) {                                                                                      \
             perror("In call to PTRACE_" #command);                                                                     \
             return 1;                                                                                                  \
         }                                                                                                              \
@@ -169,11 +171,38 @@ cleanup:
     return res;
 }
 
+static int
+set_breakpoint(pid_t pid, unsigned long long int address, unsigned int index, unsigned int condition, unsigned int size)
+{
+    assert(index < 4);
+    assert(condition < 4);
+    assert(size < 4);
+
+    size_t base = offsetof(struct user, u_debugreg[index]);
+
+    printf("base = %zu, addr_lo = %zu, addr_hi = %zu\n", base, addr_lo, addr_hi);
+    {
+        int lo = ptrace(PTRACE_PEEKUSER, pid, addr_lo, 0);
+        int hi = ptrace(PTRACE_PEEKUSER, pid, addr_hi, 0);
+        printf("address = %llx\n", address);
+        printf("lo = %x, hi = %x\n", lo, hi);
+    }
+    pt(POKEUSER, addr_lo, (void*)address);
+    pt(POKEUSER, addr_hi, 0);
+
+    int lo = ptrace(PTRACE_PEEKUSER, pid, addr_lo, 0);
+    int hi = ptrace(PTRACE_PEEKUSER, pid, addr_hi, 0);
+    printf("address = %llx\n", address);
+    printf("lo = %x, hi = %x\n", lo, hi);
+}
+
 static int debugger_loop(pid_t pid, const char* program_path)
 {
     int err = 0;
     int wstatus = 0;
     err = waitpid(pid, &wstatus, 0);
+
+    set_breakpoint(pid, (unsigned long long)&debugger_loop, 0, 0, 0);
 
     Dwarf_Error dwerr = 0;
     Dwarf_Debug dbg = 0;
