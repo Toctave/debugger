@@ -39,11 +39,11 @@ struct test_result {
     int line;
 };
 
-void breakpoint()
+static void breakpoint()
 {
 }
 
-struct test_result test_debug_regs()
+static struct test_result test_debug_regs()
 {
     pid_t child = fork();
     if (child < 0) {
@@ -101,11 +101,11 @@ int main(int argc, const char** argv)
     for (uint32_t i = 0; i < test_count; i++) {
         struct test_result res = test_functions[i]();
 
-        printf("[ %2u/%u ] %s ", i + 1, test_count, res.name);
+        printf("[ %3u/%u ] ", i + 1, test_count);
         if (!res.message) {
-            printf("\033[32mPASSED\033[37m\n");
+            printf("\033[32mPASSED\033[37m : %s\n", res.name);
         } else {
-            printf("\033[31mFAILED\033[37m at %s:%d : %s\n", res.filename, res.line, res.message);
+            printf("\033[31mFAILED\033[37m : %s at %s:%d : %s\n", res.name, res.filename, res.line, res.message);
             fails++;
         }
     }
