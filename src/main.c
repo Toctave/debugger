@@ -3,7 +3,7 @@
 
 #include <signal.h>
 
-#include <assert.h>
+#include "my_assert.h"
 #include <errno.h>
 #include <stddef.h>
 #include <stdio.h>
@@ -174,26 +174,26 @@ cleanup:
 static int
 set_breakpoint(pid_t pid, unsigned long long int address, unsigned int index, unsigned int condition, unsigned int size)
 {
-    assert(index < 4);
-    assert(condition < 4);
-    assert(size < 4);
+    ASSERT(index < 4);
+    ASSERT(condition < 4);
+    ASSERT(size < 4);
 
-    size_t base = offsetof(struct user, u_debugreg[index]);
+    /* size_t base = offsetof(struct user, u_debugreg[index]); */
 
-    printf("base = %zu, addr_lo = %zu, addr_hi = %zu\n", base, addr_lo, addr_hi);
-    {
-        int lo = ptrace(PTRACE_PEEKUSER, pid, addr_lo, 0);
-        int hi = ptrace(PTRACE_PEEKUSER, pid, addr_hi, 0);
-        printf("address = %llx\n", address);
-        printf("lo = %x, hi = %x\n", lo, hi);
-    }
-    pt(POKEUSER, addr_lo, (void*)address);
-    pt(POKEUSER, addr_hi, 0);
+    /* printf("base = %zu, addr_lo = %zu, addr_hi = %zu\n", base, addr_lo, addr_hi); */
+    /* { */
+    /*     int lo = ptrace(PTRACE_PEEKUSER, pid, addr_lo, 0); */
+    /*     int hi = ptrace(PTRACE_PEEKUSER, pid, addr_hi, 0); */
+    /*     printf("address = %llx\n", address); */
+    /*     printf("lo = %x, hi = %x\n", lo, hi); */
+    /* } */
+    /* pt(POKEUSER, addr_lo, (void*)address); */
+    /* pt(POKEUSER, addr_hi, 0); */
 
-    int lo = ptrace(PTRACE_PEEKUSER, pid, addr_lo, 0);
-    int hi = ptrace(PTRACE_PEEKUSER, pid, addr_hi, 0);
-    printf("address = %llx\n", address);
-    printf("lo = %x, hi = %x\n", lo, hi);
+    /* int lo = ptrace(PTRACE_PEEKUSER, pid, addr_lo, 0); */
+    /* int hi = ptrace(PTRACE_PEEKUSER, pid, addr_hi, 0); */
+    /* printf("address = %llx\n", address); */
+    /* printf("lo = %x, hi = %x\n", lo, hi); */
 }
 
 static int debugger_loop(pid_t pid, const char* program_path)
