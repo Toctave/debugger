@@ -28,13 +28,13 @@
 
 #endif
 
-#define ASSERT(expr) ASSERT_MSG(expr, "ASSERTion '%s' failed", #expr)
+#define ASSERT(expr) ASSERT_MSG(expr, "Assertion '%s' failed", #expr)
 
 #define STRINGIFY(expr) #expr
 
 #define ASSERT_OP(lhs, op, rhs, fmt)                                                                                   \
     ASSERT_MSG(lhs op rhs,                                                                                             \
-               "ASSERTion '%s' failed with %s = " fmt " and %s = " fmt,                                                \
+               "Assertion '%s' failed with %s = " fmt " and %s = " fmt,                                                \
                STRINGIFY(lhs op rhs),                                                                                  \
                #lhs,                                                                                                   \
                lhs,                                                                                                    \

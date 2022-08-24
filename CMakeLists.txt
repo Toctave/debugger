@@ -13,10 +13,19 @@ add_executable(child
   src/child.c
   )
 
-add_executable(tests
-  src/tests.c)
+option(TESTS "Build tests" ON)
+
+if (TESTS)
+  add_executable(tests
+    src/tests.c)
+  add_executable(test_child
+    src/test_child.c)
+  target_link_libraries(tests PRIVATE
+    dwarf)
+endif()
 
 target_link_libraries(debugger PRIVATE
   dwarf
+  dl
   )
 
