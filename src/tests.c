@@ -2,6 +2,7 @@
 #include "util.h"
 
 #include <errno.h>
+#include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -11,6 +12,8 @@
 #include <sys/user.h>
 #include <sys/wait.h>
 #include <unistd.h>
+
+#include <libdwarf/libdwarf.h>
 
 #define PASS()                                                                                                         \
     return (struct test_result)                                                                                        \
@@ -30,7 +33,9 @@
 
 #define TST_ERRNO(val) TST(val, strerror(errno))
 
-#define TST_OP(lhs, op, rhs) TST((lhs)op(rhs), #lhs " " #op " " #rhs)
+#define TST_OP(lhs, op, rhs) TST((lhs)op(rhs), #lhs " " #op " " #rhs " is false")
+
+#define TST_DWARF(res, dwerr) TST((res) != DW_DLV_ERROR, dwarf_errmsg(dwerr))
 
 struct test_result {
     const char* name;
@@ -39,6 +44,7 @@ struct test_result {
     int line;
 };
 
+typedef struct test_result test_fn(void);
 static void breakpoint()
 {
 }
@@ -89,10 +95,38 @@ static struct test_result test_debug_regs()
     PASS();
 }
 
+static struct test_result test_dwarf()
+{
+    const char* program_path = "./test_child";
+
+    char abs_path[PATH_MAX];
+    TST_ERRNO(realpath(program_path, abs_path));
+
+    printf("abs path : %s\n", abs_path);
+    printf("path max : %u\n", PATH_MAX);
+
+    Dwarf_Error dwerr = 0;
+    Dwarf_Debug dbg = 0;
+    int res = 0;
+
+    // init libdwarf
+    res = dwarf_init_path(program_path, 0, 0, DW_DLC_READ, DW_GROUPNUMBER_ANY, 0, 0, &dbg, 0, 0, 0, &dwerr);
+    TST_DWARF(res, dwerr);
+
+    TST(dbg, "Dwarf context is null");
+
+    // terminate libdwarf
+    res = dwarf_finish(dbg, &dwerr);
+    TST_DWARF(res, dwerr);
+
+    PASS();
+}
+
 int main(int argc, const char** argv)
 {
-    struct test_result (*test_functions[])() = {
+    test_fn* test_functions[] = {
         test_debug_regs,
+        test_dwarf,
     };
     uint32_t test_count = STATIC_ARRAY_COUNT(test_functions);
 
